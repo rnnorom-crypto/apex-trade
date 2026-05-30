@@ -134,6 +134,111 @@
 
   @media(max-width:900px){.hide-mobile{display:none!important}.grid-2{grid-template-columns:1fr!important}}
 
+  /* ── BOTTOM NAV (mobile only) ── */
+  #bottom-nav{display:none}
+
+  @media(max-width:768px){
+    /* Hide desktop nav tabs, keep slim top bar */
+    .nav-tabs{display:none!important}
+    #navbar{padding:0 14px;gap:0}
+
+    /* Bottom nav visible on mobile */
+    #bottom-nav{
+      display:flex;
+      position:fixed;bottom:0;left:0;right:0;
+      height:58px;
+      padding-bottom:env(safe-area-inset-bottom,0px);
+      background:rgba(8,10,15,.97);
+      backdrop-filter:blur(12px);
+      border-top:1px solid var(--border);
+      z-index:200;
+      overflow-x:auto;
+      scrollbar-width:none;
+    }
+    #bottom-nav::-webkit-scrollbar{display:none}
+    .bnav-tab{
+      flex:1 0 auto;
+      min-width:58px;
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:2px;padding:5px 6px;
+      cursor:pointer;
+      font-size:9px;font-weight:600;letter-spacing:.02em;
+      color:var(--text3);
+      position:relative;
+      transition:color 150ms ease;
+      -webkit-tap-highlight-color:transparent;
+    }
+    .bnav-tab.active{color:var(--accent)}
+    .bnav-tab.active .bnav-icon{transform:scale(1.15)}
+    .bnav-icon{font-size:19px;line-height:1;transition:transform 150ms ease}
+
+    /* Page bottom padding so content clears bottom nav */
+    .page{padding-bottom:68px!important}
+
+    /* Chat input bar sits above bottom nav */
+    .chat-input-bar{bottom:58px!important;padding:10px 14px!important}
+    /* Adjust chat message area */
+    #chat-messages{height:calc(100vh - 290px)!important}
+
+    /* Ticker strip stays below top navbar */
+    #ticker-wrap{margin-top:52px}
+
+    /* Advisor page: stack sidebar above chat on mobile */
+    #page-advisor>div{
+      flex-direction:column!important;
+      height:auto!important;
+      overflow:visible!important;
+    }
+    /* Show the advisor sidebar as a compact vertical accordion */
+    #page-advisor .hide-mobile{
+      display:block!important;
+      width:100%!important;min-width:100%!important;
+      border-right:none!important;
+      border-bottom:1px solid var(--border)!important;
+      height:auto!important;max-height:220px!important;
+      overflow-y:auto!important;
+      scrollbar-width:thin!important;
+    }
+
+    /* Prompt chips row */
+    #page-advisor [style*="overflow-x:auto"]{
+      padding-bottom:4px!important;
+    }
+
+    /* Dashboard: full-width padding */
+    #page-dashboard>div{padding:10px 12px!important}
+
+    /* Signals page */
+    #page-signals>div{padding:12px!important}
+
+    /* Feed page */
+    #page-feed>div{padding:12px!important}
+
+    /* Alerts page */
+    #page-alerts>div{padding:12px!important}
+
+    /* Strategy lab */
+    #page-lab>div{padding:10px 12px!important}
+    #page-pipeline>div{padding:10px 12px!important}
+
+    /* Fix quote grid to 2 columns */
+    #quote-grid{grid-template-columns:repeat(2,1fr)!important}
+
+    /* Signal cards full width */
+    .signal-card{font-size:13px}
+
+    /* Tables: allow horizontal scroll */
+    .trade-table-wrap{overflow-x:auto;-webkit-overflow-scrolling:touch}
+    .trade-table{min-width:480px}
+
+    /* Touch-friendly buttons */
+    .btn-primary,.strat-btn{min-height:38px}
+    .prompt-chip{padding:7px 13px!important;min-height:34px}
+
+    /* Stat boxes smaller on mobile */
+    .stat-val{font-size:16px!important}
+  }
+
   /* FEED */
   .feed-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:16px 18px;transition:border-color 150ms,transform 150ms;cursor:pointer;text-decoration:none;display:block}
   .feed-card:hover{border-color:rgba(0,200,255,.35);transform:translateY(-1px)}
@@ -205,6 +310,32 @@
   <div style="display:flex;align-items:center;gap:8px;margin-left:auto">
     <div class="status-dot"></div>
     <span style="font-size:11px;color:var(--text3);font-family:'JetBrains Mono',monospace" id="mkt-time">LIVE</span>
+  </div>
+</nav>
+
+<!-- MOBILE BOTTOM NAV -->
+<nav id="bottom-nav">
+  <div class="bnav-tab active" onclick="showPage('dashboard',this)" data-page="dashboard">
+    <span class="bnav-icon">📊</span><span>Dashboard</span>
+  </div>
+  <div class="bnav-tab" onclick="showPage('signals',this)" data-page="signals">
+    <span class="bnav-icon">📈</span><span>Signals</span>
+  </div>
+  <div class="bnav-tab" onclick="showPage('advisor',this)" data-page="advisor">
+    <span class="bnav-icon">🤖</span><span>Advisor</span>
+  </div>
+  <div class="bnav-tab" onclick="showPage('lab',this)" data-page="lab">
+    <span class="bnav-icon">🧪</span><span>Lab</span>
+  </div>
+  <div class="bnav-tab" onclick="showPage('pipeline',this)" data-page="pipeline">
+    <span class="bnav-icon">⚡</span><span>Pipeline</span>
+  </div>
+  <div class="bnav-tab" onclick="showPage('feed',this)" data-page="feed">
+    <span class="bnav-icon">📡</span><span>Feed</span>
+  </div>
+  <div class="bnav-tab" onclick="showPage('alerts',this)" data-page="alerts" style="position:relative">
+    <span class="bnav-icon">🔔</span><span>Alerts</span>
+    <span id="alert-badge-mobile" style="display:none;position:absolute;top:4px;right:10px;min-width:16px;height:16px;border-radius:8px;background:#FF5252;color:#fff;font-size:9px;font-weight:800;line-height:16px;text-align:center;padding:0 4px">0</span>
   </div>
 </nav>
 
@@ -488,7 +619,7 @@
     <!-- Equity curve + trade log -->
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px" class="grid-2">
       <div class="card"><div class="card-header">Equity Curve</div><div id="equity-chart"></div></div>
-      <div class="card"><div class="card-header">Recent Trades</div><div style="overflow-y:auto;max-height:200px"><table class="trade-table"><thead><tr><th>Date</th><th>Strategy</th><th>P&L</th><th>Multiple</th></tr></thead><tbody id="trade-tbody"><tr><td colspan="4" style="color:var(--text3);text-align:center;padding:20px">Run backtest to see results</td></tr></tbody></table></div></div>
+      <div class="card"><div class="card-header">Recent Trades</div><div class="trade-table-wrap" style="overflow-y:auto;max-height:200px"><table class="trade-table"><thead><tr><th>Date</th><th>Strategy</th><th>P&L</th><th>Multiple</th></tr></thead><tbody id="trade-tbody"><tr><td colspan="4" style="color:var(--text3);text-align:center;padding:20px">Run backtest to see results</td></tr></tbody></table></div></div>
     </div>
 
     <!-- Strategy education -->
@@ -770,8 +901,11 @@ let lastBacktestData = null, lastRiskData = null, pipelineStepData = {};
 function showPage(name, tabEl) {
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
   document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.bnav-tab').forEach(t => t.classList.remove('active'));
   document.getElementById('page-' + name).classList.add('active');
   if (tabEl) tabEl.classList.add('active');
+  // Sync bottom nav
+  document.querySelector(`.bnav-tab[data-page="${name}"]`)?.classList.add('active');
   document.getElementById('chat-bar').style.display = name === 'advisor' ? 'block' : 'none';
   if (name === 'signals') loadSignals();
   if (name === 'lab') setTimeout(initEquityChart, 50);
@@ -1781,12 +1915,12 @@ function updateAlertBadge(alerts) {
   const unread = alerts.filter(a => !a.read).length;
   const badge = document.getElementById('alert-badge');
   if (!badge) return;
-  if (unread > 0) {
-    badge.style.display = 'block';
-    badge.textContent = unread > 99 ? '99+' : unread;
-  } else {
-    badge.style.display = 'none';
-  }
+  const badgeVal = unread > 99 ? '99+' : unread;
+  [badge, document.getElementById('alert-badge-mobile')].forEach(b => {
+    if (!b) return;
+    b.style.display = unread > 0 ? 'block' : 'none';
+    b.textContent = badgeVal;
+  });
   // Update stat counters
   const total = alerts.length;
   const critical = alerts.filter(a => a.severity === 'CRITICAL').length;
@@ -1829,7 +1963,7 @@ function renderAlerts(alerts) {
             <span class="alert-sev" style="background:${sevColor[a.severity]}22;color:${sevColor[a.severity]};border:1px solid ${sevColor[a.severity]}44">${a.severity}</span>
             <span class="alert-type-badge">${a.type}</span>
             ${a.action ? `<span class="alert-action ${a.action}" style="color:${actionColor[a.action]||'var(--text2)'}">${a.action}</span>` : ''}
-            <span style="font-size:10px;color:var(--text3)">${a.symbol}</span>
+            ${a.symbol && a.symbol !== 'null' ? `<span style="font-size:10px;color:var(--text3)">${a.symbol}</span>` : ''}
           </div>
           <div style="font-size:13px;font-weight:600;color:var(--text);line-height:1.4">${a.title}</div>
           <div style="font-size:12px;color:var(--text2);margin-top:4px;line-height:1.5">${a.message || a.body || ''}</div>
