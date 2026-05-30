@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>APEX TRADE — Activate</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  *{margin:0;padding:0;box-sizing:border-box}
+  :root{--bg:#080C14;--surface:#0D1424;--surface2:#111A2E;--border:#1A2540;--accent:#00C8FF;--bull:#00E676;--bear:#FF5252;--text:#E8F0FE;--text2:#7A90B0;--text3:#3D5070;--purple:#A78BFA}
+  body{background:var(--bg);color:var(--text);font-family:'Inter',sans-serif;min-height:100vh;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+
+  /* Animated background */
+  .bg-glow{position:fixed;inset:0;pointer-events:none;z-index:0}
+  .glow-1{position:absolute;width:600px;height:600px;border-radius:50%;background:radial-gradient(circle,rgba(0,200,255,.06) 0%,transparent 70%);top:-100px;left:-100px;animation:drift 20s ease-in-out infinite}
+  .glow-2{position:absolute;width:500px;height:500px;border-radius:50%;background:radial-gradient(circle,rgba(167,139,250,.05) 0%,transparent 70%);bottom:-50px;right:-50px;animation:drift 25s ease-in-out infinite reverse}
+  @keyframes drift{0%,100%{transform:translate(0,0)}50%{transform:translate(40px,30px)}}
+
+  /* Grid lines */
+  .grid-lines{position:fixed;inset:0;background-image:linear-gradient(rgba(0,200,255,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,200,255,.03) 1px,transparent 1px);background-size:60px 60px;pointer-events:none;z-index:0}
+
+  .container{position:relative;z-index:1;width:100%;max-width:440px;padding:20px}
+
+  /* Logo */
+  .logo{display:flex;align-items:center;gap:10px;justify-content:center;margin-bottom:32px}
+  .logo-icon{width:44px;height:44px;border-radius:12px;background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.25);display:flex;align-items:center;justify-content:center}
+  .logo-text{font-size:22px;font-weight:800;letter-spacing:-.02em}
+  .logo-text span{color:var(--text2);font-weight:400}
+
+  /* Card */
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:32px;box-shadow:0 24px 80px rgba(0,0,0,.5),0 0 0 1px rgba(0,200,255,.04)}
+
+  .card-title{font-size:22px;font-weight:800;letter-spacing:-.02em;margin-bottom:6px;text-align:center}
+  .card-sub{font-size:13px;color:var(--text2);text-align:center;margin-bottom:28px;line-height:1.5}
+
+  /* Features list */
+  .features{display:flex;flex-direction:column;gap:8px;margin-bottom:28px}
+  .feature{display:flex;align-items:center;gap:10px;font-size:13px;color:var(--text2)}
+  .feature-dot{width:6px;height:6px;border-radius:50%;background:var(--bull);flex-shrink:0}
+
+  /* Input */
+  .input-label{font-size:11px;font-weight:700;letter-spacing:.06em;color:var(--text3);text-transform:uppercase;margin-bottom:8px}
+  .key-input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;letter-spacing:.04em;outline:none;transition:border-color 200ms ease;margin-bottom:14px}
+  .key-input:focus{border-color:rgba(0,200,255,.4);box-shadow:0 0 0 3px rgba(0,200,255,.06)}
+  .key-input::placeholder{color:var(--text3)}
+
+  /* Button */
+  .btn{width:100%;padding:14px;border-radius:12px;border:none;font-family:'Inter',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all 200ms ease;display:flex;align-items:center;justify-content:center;gap:8px}
+  .btn-primary{background:linear-gradient(135deg,rgba(0,200,255,.9),rgba(0,200,255,.7));color:#000;box-shadow:0 4px 20px rgba(0,200,255,.3)}
+  .btn-primary:hover{transform:translateY(-1px);box-shadow:0 6px 28px rgba(0,200,255,.4)}
+  .btn-primary:active{transform:translateY(0)}
+  .btn-primary:disabled{opacity:.5;cursor:not-allowed;transform:none}
+  .btn-whop{background:transparent;border:1px solid rgba(255,255,255,.12);color:var(--text2);margin-top:10px;font-size:13px}
+  .btn-whop:hover{border-color:rgba(255,255,255,.25);color:var(--text)}
+
+  /* Status */
+  .status{padding:10px 14px;border-radius:10px;font-size:12px;font-weight:600;margin-bottom:14px;display:none;align-items:center;gap:8px}
+  .status.error{background:rgba(255,82,82,.1);border:1px solid rgba(255,82,82,.25);color:var(--bear);display:flex}
+  .status.success{background:rgba(0,230,118,.1);border:1px solid rgba(0,230,118,.25);color:var(--bull);display:flex}
+  .status.loading{background:rgba(0,200,255,.08);border:1px solid rgba(0,200,255,.2);color:var(--accent);display:flex}
+
+  /* Divider */
+  .divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text3);font-size:11px}
+  .divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+
+  /* Dev bypass */
+  .dev-note{text-align:center;font-size:11px;color:var(--text3);margin-top:20px;line-height:1.6}
+  .dev-note code{color:var(--accent);font-family:'JetBrains Mono',monospace;background:rgba(0,200,255,.08);padding:2px 6px;border-radius:4px}
+
+  /* Ticker strip */
+  .ticker-strip{margin-bottom:24px;overflow:hidden;border-radius:8px;background:var(--surface2);border:1px solid var(--border);padding:8px 0}
+  .ticker-inner{display:flex;gap:20px;animation:scroll-l 20s linear infinite;white-space:nowrap;padding:0 12px}
+  .ticker-item{font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--text2)}
+  .ticker-item span{color:var(--bull)}
+  @keyframes scroll-l{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+
+  @media(max-width:480px){.card{padding:24px 20px}.card-title{font-size:18px}}
+</style>
+</head>
+<body>
+
+<div class="bg-glow"><div class="glow-1"></div><div class="glow-2"></div></div>
+<div class="grid-lines"></div>
+
+<div class="container">
+
+  <!-- Logo -->
+  <div class="logo">
+    <div class="logo-icon">
+      <svg width="24" height="24" viewBox="0 0 22 22" fill="none">
+        <polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="none" stroke="#00C8FF" stroke-width="1.5"/>
+        <polygon points="11,6 16,9 16,13 11,16 6,13 6,9" fill="rgba(0,200,255,.12)" stroke="#00C8FF" stroke-width="1"/>
+        <circle cx="11" cy="11" r="2" fill="#00C8FF"/>
+      </svg>
+    </div>
+    <div class="logo-text">APEX<span> TRADE</span></div>
+  </div>
+
+  <!-- Ticker -->
+  <div class="ticker-strip">
+    <div class="ticker-inner" id="license-ticker">
+      <span class="ticker-item">SPY <span id="lt-spy">—</span></span>
+      <span class="ticker-item">QQQ <span id="lt-qqq">—</span></span>
+      <span class="ticker-item">NASDAQ <span id="lt-nas">—</span></span>
+      <span class="ticker-item">VIX <span id="lt-vix">—</span></span>
+      <span class="ticker-item">SPX <span id="lt-spx">—</span></span>
+      <span class="ticker-item">GOLD <span id="lt-gld">—</span></span>
+      <span class="ticker-item">SPY <span id="lt-spy2">—</span></span>
+      <span class="ticker-item">QQQ <span id="lt-qqq2">—</span></span>
+      <span class="ticker-item">NASDAQ <span id="lt-nas2">—</span></span>
+      <span class="ticker-item">VIX <span id="lt-vix2">—</span></span>
+      <span class="ticker-item">SPX <span id="lt-spx2">—</span></span>
+      <span class="ticker-item">GOLD <span id="lt-gld2">—</span></span>
+    </div>
+  </div>
+
+  <!-- Main card -->
+  <div class="card">
+    <div class="card-title">Activate APEX Pro</div>
+    <div class="card-sub">Enter your Whop license key to unlock the full trading intelligence platform.</div>
+
+    <div class="features">
+      <div class="feature"><div class="feature-dot"></div>Live S&P 500 + NASDAQ 100 price stream (5s updates)</div>
+      <div class="feature"><div class="feature-dot"></div>APEX AI Advisor — 0DTE, weekly options, ES/NQ futures</div>
+      <div class="feature"><div class="feature-dot"></div>RSI · MACD · Bollinger · Fibonacci · S/R levels</div>
+      <div class="feature"><div class="feature-dot"></div>Sector rotation · Options flow · Put/Call ratio</div>
+      <div class="feature"><div class="feature-dot"></div>Algo Pipeline — Prompt → Backtest → Risk → Deploy</div>
+      <div class="feature"><div class="feature-dot" style="background:var(--purple)"></div>Fear & Greed · Live news feed · Macro regime analysis</div>
+    </div>
+
+    <div class="input-label">Whop License Key</div>
+    <input class="key-input" id="license-input" type="text" placeholder="APEX-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" oninput="clearStatus()"/>
+
+    <div class="status" id="status-msg"></div>
+
+    <button class="btn btn-primary" id="activate-btn" onclick="activate()">
+      <svg width="16" height="16" viewBox="0 0 22 22" fill="none"><polygon points="11,2 20,7 20,15 11,20 2,15 2,7" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="11" cy="11" r="2" fill="currentColor"/></svg>
+      Activate APEX
+    </button>
+
+    <div class="divider">or</div>
+
+    <button class="btn btn-whop" onclick="window.open('https://whop.com','_blank')">
+      🛒 Get access on Whop.com
+    </button>
+  </div>
+
+  <div class="dev-note">
+    Dev mode: use key <code>APEX-DEV-0001</code> to test locally.<br>
+    Questions? <a href="mailto:nocodeviv@gmail.com" style="color:var(--accent)">nocodeviv@gmail.com</a>
+  </div>
+
+</div>
+
+<script>
+const API = window.location.hostname === 'localhost' ? 'http://localhost:3002' : '';
+
+// Load ticker prices
+async function loadLicenseTicker() {
+  try {
+    const r = await fetch(`${API}/api/market/quotes?symbols=SPY,QQQ,%5EIXIC,%5EVIX,%5EGSPC,GLD`);
+    const d = await r.json();
+    if (!d.success) return;
+    const map = {};
+    d.data.forEach(q => map[q.symbol] = q);
+    const fmt = (q) => q ? `${q.price?.toFixed(2)} <span style="color:${q.changePercent>=0?'#00E676':'#FF5252'}">${q.changePercent>=0?'+':''}${q.changePercent?.toFixed(2)}%</span>` : '—';
+    const pairs = [['SPY','lt-spy','lt-spy2'],['QQQ','lt-qqq','lt-qqq2'],['^IXIC','lt-nas','lt-nas2'],['^VIX','lt-vix','lt-vix2'],['^GSPC','lt-spx','lt-spx2'],['GLD','lt-gld','lt-gld2']];
+    pairs.forEach(([sym,id1,id2]) => {
+      const v = fmt(map[sym]);
+      [id1,id2].forEach(id => { const el=document.getElementById(id); if(el) el.innerHTML=v; });
+    });
+  } catch {}
+}
+loadLicenseTicker();
+
+function showStatus(type, msg) {
+  const el = document.getElementById('status-msg');
+  el.className = `status ${type}`;
+  el.innerHTML = msg;
+}
+function clearStatus() {
+  document.getElementById('status-msg').className = 'status';
+}
+
+async function activate() {
+  const key = document.getElementById('license-input').value.trim();
+  if (!key) { showStatus('error', '⚠ Please enter your license key.'); return; }
+
+  const btn = document.getElementById('activate-btn');
+  btn.disabled = true;
+  showStatus('loading', '⏳ Verifying your license key…');
+
+  try {
+    const r = await fetch(`${API}/api/whop/verify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ licenseKey: key })
+    });
+    const d = await r.json();
+
+    if (d.success && d.valid) {
+      showStatus('success', `✓ Activated! Welcome to APEX ${d.plan || 'Pro'}. Launching…`);
+      localStorage.setItem('apex_license', JSON.stringify({ key, plan: d.plan, ts: Date.now(), expiry: d.expiry }));
+      setTimeout(() => { window.location.href = 'index.html'; }, 1200);
+    } else {
+      showStatus('error', `✗ ${d.error || 'Invalid license key. Check your Whop purchase.'}`);
+      btn.disabled = false;
+    }
+  } catch(e) {
+    showStatus('error', `✗ Could not connect to server. Make sure APEX API is running (node api-server.js).`);
+    btn.disabled = false;
+  }
+}
+
+document.getElementById('license-input').addEventListener('keydown', e => {
+  if (e.key === 'Enter') activate();
+});
+
+// Auto-uppercase key as typed
+document.getElementById('license-input').addEventListener('input', function() {
+  const pos = this.selectionStart;
+  this.value = this.value.toUpperCase();
+  this.setSelectionRange(pos, pos);
+});
+</script>
+</body>
+</html>
