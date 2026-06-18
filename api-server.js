@@ -349,7 +349,7 @@ function scoreLabel(s) {
 }
 
 // ─── Live Price Stream (SSE) ──────────────────────────────────────────────────
-const STREAM_SYMBOLS = ['SPY','QQQ','^IXIC','^VIX','^GSPC','^NDX','GLD','TLT'];
+const STREAM_SYMBOLS = ['SPY','QQQ','^NDX','^VIX','^GSPC','GLD','TLT','BTC-USD','ETH-USD','SOL-USD','SPCE','RKLB','LUNR','ASTS','ASTR','LMT','BA'];
 let priceClients = [];
 let lastPrices = {};
 
@@ -401,7 +401,7 @@ app.get('/api/prices/stream', async (req, res) => {
 
 app.get('/api/market/quotes', async (req, res) => {
   try {
-    const symbols = (req.query.symbols || 'SPY,QQQ,^IXIC,^VIX,^GSPC,GLD,TLT').split(',');
+    const symbols = (req.query.symbols || 'SPY,QQQ,^NDX,^VIX,^GSPC,GLD,TLT').split(',');
     const results = await Promise.all(symbols.map(sym => getQuoteMeta(sym).catch(() => null)));
     res.json({ success: true, data: results.filter(Boolean) });
   } catch (err) {
@@ -538,7 +538,7 @@ function generateSignals(quotes) {
   const spy = quotes.find(q => q.symbol === 'SPY');
   const vix = quotes.find(q => q.symbol === '^VIX');
   const qqq = quotes.find(q => q.symbol === 'QQQ');
-  const ixic = quotes.find(q => q.symbol === '^IXIC');
+  const ixic = quotes.find(q => q.symbol === '^NDX') || quotes.find(q => q.symbol === '^IXIC');
 
   if (!spy || !vix) return signals;
 
@@ -645,12 +645,89 @@ function generateSignals(quotes) {
   return signals;
 }
 
+// ─── Crypto Signal Generator ─────────────────────────────────────────────────
+function generateCryptoSignals(quotes) {
+  const signals = [];
+  const m = {};
+  quotes.forEach(q => { m[q.symbol] = q; });
+
+  const btc = m['BTC-USD'], eth = m['ETH-USD'], sol = m['SOL-USD'], spy = m['SPY'];
+  if (!btc) return signals;
+
+  const btcP = btc.price, btcChg = btc.changePercent || 0;
+  const ethChg = eth?.changePercent || 0;
+  const solChg = sol?.changePercent || 0;
+  const spyChg = spy?.changePercent || 0;
+
+  // BTC momentum long
+  if (btcChg > 2) {
+    signals.push({
+      id: 101, type: 'CALL', strategy: 'BTC Momentum Breakout', ticker: 'BTC/ETH',
+      conviction: 'HIGH', expiry: 'Spot / Swing',
+      strikes: `BTC $${(btcP*1.03).toFixed(0)} target · ETH follow`,
+      potential: '3-8x (leverage)',
+      reasoning: `Bitcoin up ${btcChg.toFixed(1)}% — momentum breakout. ETH typically follows with 1.2–1.8x BTC move. Risk-on crypto regime.`,
+      entry: `BTC current $${btcP.toFixed(0)}`,
+      stop: `$${(btcP * 0.97).toFixed(0)} (-3%)`,
+      target: `$${(btcP * 1.08).toFixed(0)} (+8%)`,
+      tags: ['BTC', 'Momentum', 'Crypto', 'Risk-On']
+    });
+  }
+
+  // BTC oversold bounce
+  if (btcChg < -3) {
+    signals.push({
+      id: 102, type: 'CALL', strategy: 'BTC Oversold Bounce', ticker: 'BTC',
+      conviction: 'MEDIUM', expiry: '1-3 days',
+      strikes: `Spot entry near $${btcP.toFixed(0)}`,
+      potential: '2-5x',
+      reasoning: `BTC down ${Math.abs(btcChg).toFixed(1)}% — oversold. Historical mean reversion within 24–72 hrs. Watch for volume confirmation.`,
+      entry: `$${btcP.toFixed(0)} or 1% lower`,
+      stop: `$${(btcP * 0.95).toFixed(0)} (-5%)`,
+      target: `$${(btcP * 1.06).toFixed(0)} (+6%)`,
+      tags: ['BTC', 'Oversold', 'Mean Reversion', 'Crypto']
+    });
+  }
+
+  // BTC/SPY divergence (crypto leading equities)
+  if (btcChg > 1.5 && spyChg < 0) {
+    signals.push({
+      id: 103, type: 'CALL', strategy: 'Crypto Leading Equities', ticker: 'BTC + SPY',
+      conviction: 'MEDIUM', expiry: '1-5 days',
+      strikes: 'BTC spot + SPY calls',
+      potential: '4-10x',
+      reasoning: `BTC +${btcChg.toFixed(1)}% while SPY ${spyChg.toFixed(1)}% — crypto risk-on signal often precedes equity recovery by 1–3 days.`,
+      entry: 'BTC spot + SPY 0.5–1% OTM calls',
+      stop: 'BTC breaks below open',
+      target: 'SPY follows BTC within 2 days',
+      tags: ['BTC', 'SPY', 'Divergence', 'Leading Indicator']
+    });
+  }
+
+  // ETH outperforming — altseason signal
+  if (ethChg - btcChg > 2) {
+    signals.push({
+      id: 104, type: 'CALL', strategy: 'ETH Outperformance — Altseason Signal', ticker: 'ETH/SOL',
+      conviction: 'MEDIUM', expiry: 'Swing 3-7 days',
+      strikes: `ETH $${(eth?.price*1.05||0).toFixed(0)} · SOL follow`,
+      potential: '5-15x (SOL high beta)',
+      reasoning: `ETH +${ethChg.toFixed(1)}% vs BTC +${btcChg.toFixed(1)}% — ETH dominance rising signals altcoin rotation. SOL typically 3-5x BTC in alt runs.`,
+      entry: 'ETH spot · SOL spot',
+      stop: 'ETH closes below BTC % return',
+      target: 'ETH +10%, SOL +15-25%',
+      tags: ['ETH', 'SOL', 'Altseason', 'Rotation']
+    });
+  }
+
+  return signals;
+}
+
 app.get('/api/signals', async (req, res) => {
   try {
-    const syms = ['SPY', 'QQQ', '^IXIC', '^VIX', '^GSPC'];
+    const syms = ['SPY', 'QQQ', '^NDX', '^VIX', '^GSPC', 'BTC-USD', 'ETH-USD', 'SOL-USD', 'SPCE', 'RKLB', 'ASTS', 'LUNR', 'LMT', 'BA'];
     const rawQuotes = await Promise.all(syms.map(s => getQuoteMeta(s).catch(() => null)));
     const quotes = rawQuotes.filter(Boolean);
-    const signals = generateSignals(quotes);
+    const signals = [...generateSignals(quotes), ...generateCryptoSignals(quotes)];
     res.json({ success: true, data: signals, marketSnapshot: quotes });
   } catch (err) {
     res.status(500).json({ success: false, error: err.message });
@@ -814,7 +891,7 @@ app.post('/api/pipeline/risk', async (req, res) => {
 
 // ─── AI Chat Advisor ──────────────────────────────────────────────────────────
 
-const SYSTEM_PROMPT = `You are APEX — an elite S&P 500 and NASDAQ 100 derivatives trading advisor with 20 years of experience. You specialize in asymmetric trades targeting 10x–100x+ returns.
+const SYSTEM_PROMPT = `You are APEX — an elite multi-asset trading advisor covering equities, derivatives, and cryptocurrency. You have 20 years of experience targeting asymmetric 10x–100x+ returns.
 
 Your expertise covers:
 - 0DTE SPX/NDX options: gamma exposure, pin risk, dealer hedging flows, IV crush setups
@@ -823,6 +900,19 @@ Your expertise covers:
 - NQ/MNQ futures: NASDAQ tech momentum, ORB strategies, micro futures leverage
 - Macro regime identification: 200MA analysis, VIX term structure, breadth divergences
 - Algorithmic strategy development: backtesting, drawdown analysis, Kelly criterion, position sizing
+- Bitcoin & crypto: BTC cycle analysis, on-chain metrics, halving cycles, dominance, altcoin rotation
+- Stablecoins: USDT/USDC flow analysis as risk-on/risk-off signals, stablecoin dominance
+- Crypto derivatives: BTC perpetual funding rates, options skew, liquidation levels
+- Cross-asset correlation: BTC/SPY risk-on alignment, crypto fear & greed vs VIX divergences
+
+Crypto-specific advisory:
+- BTC halving cycles: accumulation → breakout → euphoria → correction phases
+- Stablecoin dominance rising = risk-off (money leaving crypto) = bearish signal
+- Funding rate > 0.1% = crowded longs, fade risk. Funding < -0.05% = shorts crowded, squeeze risk
+- BTC dominance rising = altcoin weakness, rotate to BTC. BTC dom falling = altseason
+- Key BTC levels: 4-year cycle lows, previous ATH as support, 200W MA
+- Ethereum: treat as tech/growth proxy, correlates with QQQ, gas fees signal network activity
+- Solana: high-beta play, 3-5x BTC moves in bull markets
 
 When discussing the algo pipeline (Prompt → Backtest → Drawdowns → Risk → Deploy):
 - Help users define precise entry/exit rules that can be backtested
@@ -831,11 +921,12 @@ When discussing the algo pipeline (Prompt → Backtest → Drawdowns → Risk �
 - Deployment checklist: paper trade 30 days minimum, define kill switch (daily loss limit), set position caps
 
 Advisory rules:
-1. Always specify: ticker, structure, strikes, expiry, entry trigger, stop, target, position size % of account
-2. Quantify asymmetry: "risk $100 debit for $800–$1,500 potential = 8–15x"
-3. Flag macro context: regime, VIX level, upcoming catalysts (FOMC, CPI, NFP)
-4. Size lottery tickets at 0.5–1% of account. Size high-conviction spreads at 2–3%.
+1. Always specify: ticker/asset, structure, entry trigger, stop, target, position size % of account
+2. Quantify asymmetry: "risk $100 for $800–$1,500 potential = 8–15x"
+3. Flag macro context: regime, VIX level, BTC cycle phase, upcoming catalysts (FOMC, CPI, NFP, halvings)
+4. Size lottery tickets at 0.5–1% of account. Size high-conviction trades at 2–3%.
 5. Never recommend naked options — always define max loss with spreads or hard stops.
+6. For crypto: always note if BTC is correlated or diverging from equities — critical for sizing.
 
 Be decisive, jargon-fluent, and actionable.`;
 
@@ -874,6 +965,21 @@ app.post('/api/chat', async (req, res) => {
       if (fg.status === 'fulfilled' && fg.value) {
         contextParts.push(`FEAR & GREED INDEX: ${fg.value.score}/100 — ${fg.value.label}`);
       }
+
+      // Inject BTC/ETH/SOL live prices into chat context
+      try {
+        const [btcQ, ethQ, solQ] = await Promise.all([
+          getQuoteMeta('BTC-USD').catch(()=>null),
+          getQuoteMeta('ETH-USD').catch(()=>null),
+          getQuoteMeta('SOL-USD').catch(()=>null),
+        ]);
+        if (btcQ) {
+          const btcChg = btcQ.changePercent || 0;
+          const ethChg = ethQ?.changePercent || 0;
+          const correlation = Math.abs(btcChg - (context?.includes('SPY') ? parseFloat(context.match(/SPY[:\s]+([+-]?\d+\.?\d*)/)?.[1]||0) : 0)) < 2 ? 'Correlated with equities' : 'Diverging from equities';
+          contextParts.push(`CRYPTO PRICES:\nBTC: $${btcQ.price?.toFixed(0)} (${btcChg>=0?'+':''}${btcChg.toFixed(2)}%) — ${btcChg>2?'Bullish momentum':btcChg<-2?'Bearish/caution':'Neutral'}\nETH: $${ethQ?.price?.toFixed(2)||'—'} (${ethChg>=0?'+':''}${ethChg.toFixed(2)}%)\nSOL: $${solQ?.price?.toFixed(2)||'—'}\nBTC/Equity Signal: ${correlation}`);
+        }
+      } catch {}
     } catch {}
 
     if (contextParts.length > 0) {
@@ -1170,11 +1276,14 @@ async function runAlertEngine() {
   const alerts = [];
   try {
     // Fetch all needed data in parallel
-    const [spyQ, qqqQ, vixQ, spxQ] = await Promise.all([
+    const [spyQ, qqqQ, vixQ, spxQ, btcQ, ethQ, solQ] = await Promise.all([
       getQuoteMeta('SPY').catch(()=>null),
       getQuoteMeta('QQQ').catch(()=>null),
       getQuoteMeta('^VIX').catch(()=>null),
       getQuoteMeta('^GSPC').catch(()=>null),
+      getQuoteMeta('BTC-USD').catch(()=>null),
+      getQuoteMeta('ETH-USD').catch(()=>null),
+      getQuoteMeta('SOL-USD').catch(()=>null),
     ]);
 
     const spyT = techCache['SPY']?.data;
@@ -1369,6 +1478,62 @@ async function runAlertEngine() {
           title: 'Sector Rotation — Risk-OFF Shift Detected',
           body: `Defensives (XLP/XLU) leading Tech (XLK). Risk-off rotation signals caution on aggressive calls. Consider put spreads or reducing size.`,
           action: 'WATCH', tags: ['Sector', 'Risk-OFF', 'Defensives'],
+        }));
+      }
+    }
+
+    // ── Crypto Alerts ─────────────────────────────────────────────────────────
+    if (btcQ) {
+      const btcP = btcQ.price || 0;
+      const btcChg = btcQ.changePercent || 0;
+      const ethChg = ethQ?.changePercent || 0;
+      const solChg = solQ?.changePercent || 0;
+      const spyChg2 = spyQ?.changePercent || 0;
+
+      // BTC big move up
+      if (btcChg > 3) {
+        alerts.push(makeAlert({
+          type: 'BREAKOUT', severity: 'HIGH',
+          title: `₿ BTC Breakout +${btcChg.toFixed(1)}%`,
+          body: `Bitcoin surging ${btcChg.toFixed(1)}%. Risk-on crypto signal — ETH and SOL typically follow. Watch for equity correlation.`,
+          symbol: 'BTC-USD', price: btcP,
+          entry: `$${btcP.toFixed(0)}`,
+          stop: `$${(btcP*0.97).toFixed(0)}`,
+          target: `$${(btcP*1.08).toFixed(0)}`,
+          action: 'BUY_CALL', tags: ['BTC', 'Breakout', 'Crypto', 'Risk-On'],
+        }));
+      }
+
+      // BTC big drop
+      if (btcChg < -4) {
+        alerts.push(makeAlert({
+          type: 'REVERSAL', severity: 'CRITICAL',
+          title: `₿ BTC Flash Crash ${btcChg.toFixed(1)}%`,
+          body: `Bitcoin down ${Math.abs(btcChg).toFixed(1)}%. Risk-off signal — monitor SPY/QQQ for correlation sell-off. Reduce risk exposure.`,
+          symbol: 'BTC-USD', price: btcP,
+          action: 'WATCH', tags: ['BTC', 'Crash', 'Risk-Off', 'Warning'],
+        }));
+      }
+
+      // ETH leading BTC (altseason)
+      if (ethChg - btcChg > 3) {
+        alerts.push(makeAlert({
+          type: 'MOMENTUM', severity: 'HIGH',
+          title: `Ξ ETH Outperforming BTC — Altseason Signal`,
+          body: `ETH +${ethChg.toFixed(1)}% vs BTC +${btcChg.toFixed(1)}%. ETH dominance rising signals altcoin rotation. SOL high-beta play.`,
+          symbol: 'ETH-USD', price: ethQ?.price || 0,
+          action: 'BUY_CALL', tags: ['ETH', 'Altseason', 'SOL', 'Rotation'],
+        }));
+      }
+
+      // BTC/SPY divergence — crypto leading
+      if (btcChg > 2 && spyChg2 < -0.5) {
+        alerts.push(makeAlert({
+          type: 'ENTRY', severity: 'HIGH',
+          title: `₿ BTC Leading SPY — Risk-On Setup`,
+          body: `BTC +${btcChg.toFixed(1)}% while SPY ${spyChg2.toFixed(1)}%. Crypto often leads equities by 1-3 days. Potential SPY recovery setup.`,
+          symbol: 'SPY', price: spyQ?.price || 0,
+          action: 'BUY_CALL', tags: ['BTC', 'SPY', 'Divergence', 'Leading'],
         }));
       }
     }
