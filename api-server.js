@@ -349,7 +349,7 @@ function scoreLabel(s) {
 }
 
 // ─── Live Price Stream (SSE) ──────────────────────────────────────────────────
-const STREAM_SYMBOLS = ['SPY','QQQ','^NDX','^VIX','^GSPC','GLD','TLT','BTC-USD','ETH-USD','SOL-USD','SPCE','RKLB','LUNR','ASTS','ASTR','LMT','BA'];
+const STREAM_SYMBOLS = ['SPY','QQQ','^NDX','^VIX','^GSPC','GLD','TLT','BTC-USD','ETH-USD','SOL-USD','SPCE','RKLB','LUNR','ASTS','NOC','LMT','BA'];
 let priceClients = [];
 let lastPrices = {};
 
@@ -724,7 +724,7 @@ function generateCryptoSignals(quotes) {
 
 app.get('/api/signals', async (req, res) => {
   try {
-    const syms = ['SPY', 'QQQ', '^NDX', '^VIX', '^GSPC', 'BTC-USD', 'ETH-USD', 'SOL-USD', 'SPCE', 'RKLB', 'ASTS', 'LUNR', 'LMT', 'BA'];
+    const syms = ['SPY', 'QQQ', '^NDX', '^VIX', '^GSPC', 'BTC-USD', 'ETH-USD', 'SOL-USD', 'SPCE', 'RKLB', 'ASTS', 'LUNR', 'NOC', 'LMT', 'BA'];
     const rawQuotes = await Promise.all(syms.map(s => getQuoteMeta(s).catch(() => null)));
     const quotes = rawQuotes.filter(Boolean);
     const signals = [...generateSignals(quotes), ...generateCryptoSignals(quotes)];

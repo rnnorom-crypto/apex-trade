@@ -356,6 +356,7 @@
     <div class="tick-item"><span class="tick-sym" style="color:#00E676">🛸 RKLB</span><span class="tick-price" id="t-rklb">—</span><span id="tc-rklb" style="font-size:11px">—</span></div>
     <div class="tick-item"><span class="tick-sym" style="color:#A78BFA">🌙 LUNR</span><span class="tick-price" id="t-lunr">—</span><span id="tc-lunr" style="font-size:11px">—</span></div>
     <div class="tick-item"><span class="tick-sym" style="color:#FFB300">⭐ ASTS</span><span class="tick-price" id="t-asts">—</span><span id="tc-asts" style="font-size:11px">—</span></div>
+    <div class="tick-item"><span class="tick-sym" style="color:#E2EAF4">🛡 NOC</span><span class="tick-price" id="t-noc">—</span><span id="tc-noc" style="font-size:11px">—</span></div>
     <!-- duplicate for loop -->
     <div class="tick-item"><span class="tick-sym">SPY</span><span class="tick-price" id="t-spy2">—</span></div>
     <div class="tick-item"><span class="tick-sym">QQQ</span><span class="tick-price" id="t-qqq2">—</span></div>
@@ -371,6 +372,7 @@
     <div class="tick-item"><span class="tick-sym" style="color:#00E676">🛸 RKLB</span><span class="tick-price" id="t-rklb2">—</span></div>
     <div class="tick-item"><span class="tick-sym" style="color:#A78BFA">🌙 LUNR</span><span class="tick-price" id="t-lunr2">—</span></div>
     <div class="tick-item"><span class="tick-sym" style="color:#FFB300">⭐ ASTS</span><span class="tick-price" id="t-asts2">—</span></div>
+    <div class="tick-item"><span class="tick-sym" style="color:#E2EAF4">🛡 NOC</span><span class="tick-price" id="t-noc2">—</span></div>
   </div>
 </div>
 
@@ -453,10 +455,10 @@
         <div class="mono" style="font-size:20px;font-weight:700" id="qp-asts">—</div>
         <div class="mono" style="font-size:11px;margin-top:2px" id="qch-asts">—</div>
       </div>
-      <div class="quote-card" id="qc-astr" style="border-color:rgba(255,61,94,.25)">
-        <div style="font-size:10px;font-weight:600;letter-spacing:.06em;margin-bottom:5px;color:#FF3D5E">🌌 ASTR</div>
-        <div class="mono" style="font-size:20px;font-weight:700" id="qp-astr">—</div>
-        <div class="mono" style="font-size:11px;margin-top:2px" id="qch-astr">—</div>
+      <div class="quote-card" id="qc-noc" style="border-color:rgba(226,234,244,.25)">
+        <div style="font-size:10px;font-weight:600;letter-spacing:.06em;margin-bottom:5px;color:var(--text2)">🛡 NOC</div>
+        <div class="mono" style="font-size:20px;font-weight:700" id="qp-noc">—</div>
+        <div class="mono" style="font-size:11px;margin-top:2px" id="qch-noc">—</div>
       </div>
       <div class="quote-card" id="qc-lmt" style="border-color:rgba(0,144,255,.25)">
         <div style="font-size:10px;font-weight:600;letter-spacing:.06em;margin-bottom:5px;color:#0090FF">🛡 LMT</div>
@@ -1184,7 +1186,7 @@ function showPage(name, tabEl) {
 // ── Market Quotes ───────────────────────────────────────────────────────────
 async function loadQuotes() {
   try {
-    const r = await fetch(`${API}/api/market/quotes?symbols=SPY,QQQ,%5ENDX,%5EVIX,%5EGSPC,GLD,TLT,BTC-USD,ETH-USD,SOL-USD,BNB-USD,USDT-USD,USDC-USD,SPCE,RKLB,LUNR,ASTS,ASTR,LMT,BA`);
+    const r = await fetch(`${API}/api/market/quotes?symbols=SPY,QQQ,%5ENDX,%5EVIX,%5EGSPC,GLD,TLT,BTC-USD,ETH-USD,SOL-USD,BNB-USD,USDT-USD,USDC-USD,SPCE,RKLB,LUNR,ASTS,NOC,LMT,BA`);
     const d = await r.json();
     if (d.success) updateQuotes(d.data);
   } catch(e) {}
@@ -1203,7 +1205,7 @@ function updateQuotes(quotes) {
     ['BTC-USD','btc','qc-btc'], ['ETH-USD','eth','qc-eth'], ['SOL-USD','sol','qc-sol'],
     ['BNB-USD','bnb','qc-bnb'], ['USDT-USD','usdt','qc-usdt'], ['USDC-USD','usdc','qc-usdc'],
     ['SPCE','spce','qc-spce'], ['RKLB','rklb','qc-rklb'], ['LUNR','lunr','qc-lunr'],
-    ['ASTS','asts','qc-asts'], ['ASTR','astr','qc-astr'], ['LMT','lmt','qc-lmt'], ['BA','ba','qc-ba']
+    ['ASTS','asts','qc-asts'], ['NOC','noc','qc-noc'], ['LMT','lmt','qc-lmt'], ['BA','ba','qc-ba']
   ];
   MAP.forEach(([sym, id, cardId]) => {
     const q = m[sym]; if (!q) return;
@@ -1425,7 +1427,7 @@ function openSignalAdvisor(strategy) {
 const PRICE_LABELS = {
   'SPY':'SPY','QQQ':'QQQ','^NDX':'NDX 100','^VIX':'VIX','^GSPC':'SPX','GLD':'GOLD','TLT':'TLT',
   'BTC-USD':'Bitcoin','ETH-USD':'Ethereum','SOL-USD':'Solana','BNB-USD':'BNB','USDT-USD':'USDT','USDC-USD':'USDC',
-  'SPCE':'Virgin Galactic','RKLB':'Rocket Lab','LUNR':'Intuitive Machines','ASTS':'AST SpaceMobile','ASTR':'Astra Space','LMT':'Lockheed Martin','BA':'Boeing'
+  'SPCE':'Virgin Galactic','RKLB':'Rocket Lab','LUNR':'Intuitive Machines','ASTS':'AST SpaceMobile','NOC':'Northrop Grumman','LMT':'Lockheed Martin','BA':'Boeing'
 };
 
 function startPriceStream() {
